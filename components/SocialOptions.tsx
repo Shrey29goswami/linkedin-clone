@@ -23,7 +23,7 @@ const SocialOptions = ({ post }: { post: IPostDocument }) => {
         setLiked(!liked);
         setLikes(newLike);
 
-        const res = await fetch(`/api/posts/${post._id}/${liked ? '/dislike' : '/like'}`, {
+        const res = await fetch(`/api/posts/${post.id}/${liked ? '/dislike' : '/like'}`, {
             method: 'POST',
             headers: {
                 'Content-Type': "application/json"
@@ -80,7 +80,7 @@ const SocialOptions = ({ post }: { post: IPostDocument }) => {
             {
                 commentOpen && (
                     <div className='p-4'>
-                        <CommentInput postId = {post._id}/>
+                        <CommentInput postId = {post.id}/>
                         <Comments post = {post}/>
                     </div>
                 )
