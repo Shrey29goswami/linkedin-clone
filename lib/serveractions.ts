@@ -2,16 +2,16 @@
 
 import { Post } from "@/models/post.model";
 import { IUser } from "@/models/user.model";
-import { currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server"
 import { v2 as cloudinary } from 'cloudinary';
 import { connectDB } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { Comment } from "@/models/comment.model";
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
 });
 
 // creating post using server actions
@@ -33,21 +33,20 @@ export const createPostAction = async (inputText: string, selectedFile: string) 
     let uploadResponse;
     try {
         if (image) {
-            uploadResponse = await cloudinary.uploader.upload(image, {
-                folder: "user_posts" // Organizing images in a folder
-            });
+            //1. create post with image
+            uploadResponse = await cloudinary.uploader.upload(image);
             await Post.create({
                 description: inputText,
                 user: userDatabase,
-                imageUrl: uploadResponse?.secure_url // Storing image URL
-            });
+                imageUrl: uploadResponse?.secure_url // yha pr image url ayega from cloudinary
+            })
+        } else {
+            //2. create post with text only
+            await Post.create({
+                description: inputText,
+                user: userDatabase
+            })
         }
-        else {
-            await Post.create({
-                description: inputText,
-                user: userDatabase,
-            });
-        }        
         revalidatePath("/");
     } catch (error: any) {
         throw new Error(error);
@@ -80,10 +79,9 @@ export const deletePostAction = async (postId: string) => {
     try {
         await Post.deleteOne({ _id: postId });
         revalidatePath("/");
-    } catch (error) {
-        throw new Error(`An error occurred: ${error.message}`);
+    } catch (error: any) {
+        throw new Error('An error occurred', error);
     }
-    
 }
 
 export const createCommentAction = async (postId: string, formData: FormData) => {
@@ -108,10 +106,8 @@ export const createCommentAction = async (postId: string, formData: FormData) =>
             user: userDatabase,
         });
 
-        post.comments = post.comments ?? []; // Ensure it's an array
-        post.comments.push(comment._id);
+        post.comments?.push(comment.id);
         await post.save();
-
 
         revalidatePath("/");
     } catch (error) {
