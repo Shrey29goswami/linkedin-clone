@@ -9,9 +9,9 @@ import { revalidatePath } from "next/cache";
 import { Comment } from "@/models/comment.model";
 
 cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.API_KEY,
-    api_secret: process.env.API_SECRET
+    cloud_name: process.env.dyrlczbdq,
+    api_key: process.env.531661837751942,
+    api_secret: process.env.bZHfzu0nvUCTMFiicL70GYQNl3Q
 });
 
 // creating post using server actions
@@ -106,7 +106,7 @@ export const createCommentAction = async (postId: string, formData: FormData) =>
             user: userDatabase,
         });
 
-        post.comments?.push(comment.id);
+        post.comments?.push(comment._id);
         await post.save();
 
         revalidatePath("/");
