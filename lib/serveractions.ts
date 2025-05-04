@@ -4,7 +4,7 @@ import { Post } from "@/models/post.model";
 import { IUser } from "@/models/user.model";
 import { currentUser } from "@clerk/nextjs/server";
 import { v2 as cloudinary } from 'cloudinary';
-import { connectDB } from "./db";
+import { connectDB } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { Comment } from "@/models/comment.model";
 
