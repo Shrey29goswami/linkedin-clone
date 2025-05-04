@@ -2,16 +2,16 @@
 
 import { Post } from "@/models/post.model";
 import { IUser } from "@/models/user.model";
-import { currentUser } from "@clerk/nextjs/server"
+import { currentUser } from "@clerk/nextjs/server";
 import { v2 as cloudinary } from 'cloudinary';
 import { connectDB } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { Comment } from "@/models/comment.model";
 
 cloudinary.config({
-    cloud_name: process.env.dyrlczbdq,
-    api_key: process.env.531661837751942,
-    api_secret: process.env.bZHfzu0nvUCTMFiicL70GYQNl3Q
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // creating post using server actions
@@ -33,20 +33,21 @@ export const createPostAction = async (inputText: string, selectedFile: string) 
     let uploadResponse;
     try {
         if (image) {
-            //1. create post with image
-            uploadResponse = await cloudinary.uploader.upload(image);
+            uploadResponse = await cloudinary.uploader.upload(image, {
+                folder: "user_posts" // Organizing images in a folder
+            });
             await Post.create({
                 description: inputText,
                 user: userDatabase,
-                imageUrl: uploadResponse?.secure_url // yha pr image url ayega from cloudinary
-            })
-        } else {
-            //2. create post with text only
+                imageUrl: uploadResponse?.secure_url // Storing image URL
+            });
+        }
+        else {
             await Post.create({
                 description: inputText,
-                user: userDatabase
-            })
-        }
+                user: userDatabase,
+            });
+        }        
         revalidatePath("/");
     } catch (error: any) {
         throw new Error(error);
@@ -79,9 +80,10 @@ export const deletePostAction = async (postId: string) => {
     try {
         await Post.deleteOne({ _id: postId });
         revalidatePath("/");
-    } catch (error: any) {
-        throw new Error('An error occurred', error);
+    } catch (error) {
+        throw new Error(`An error occurred: ${error.message}`);
     }
+    
 }
 
 export const createCommentAction = async (postId: string, formData: FormData) => {
@@ -106,8 +108,10 @@ export const createCommentAction = async (postId: string, formData: FormData) =>
             user: userDatabase,
         });
 
-        post.comments?.push(comment._id);
+        post.comments = post.comments ?? []; // Ensure it's an array
+        post.comments.push(comment._id);
         await post.save();
+
 
         revalidatePath("/");
     } catch (error) {
